@@ -1,3 +1,12 @@
+---
+title: SQL Debug Env
+emoji: 🛢️
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
 # SQL Debug Environment (`sql-debug-env`)
 
 [![openenv](https://img.shields.io/badge/OpenEnv-compliant-green)](https://huggingface.co/openenv)
