@@ -138,23 +138,24 @@ def build_prompt(obs: dict, feedback: Optional[str]) -> str:
     return "\n".join(parts)
 
 
-def get_agent_response(client: OpenAI, obs: dict, feedback: Optional[str]) -> str:
+def get_agent_response(client, obs, feedback):
     try:
         completion = client.chat.completions.create(
             model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": build_prompt(obs, feedback)},
+                {"role": "user", "content": build_prompt(obs, feedback)},
             ],
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
-            stream=False,
         )
         text = (completion.choices[0].message.content or "").strip()
-        return text if text else "select_star"
+        return text if text else "SELECT * FROM users"
     except Exception as exc:
-        print(f"[DEBUG] LLM request failed: {exc}", flush=True)
-        return "select_star"
+        print(f"[DEBUG] LLM failed: {exc}", flush=True)
+
+        # 🔥 HARD FALLBACK (IMPORTANT)
+        return "SELECT id, name FROM users"
 
 
 # ── Episode runner ────────────────────────────────────────────────────────────
@@ -169,7 +170,9 @@ def run_episode(client: OpenAI, task_name: str) -> None:
 
     try:
         reset_data = env_reset(task_name)
-        obs = reset_data["observation"]
+        obs = reset_data.get("observation", {})
+        if not obs:
+            raise RuntimeError("Invalid reset response")
         done = reset_data.get("done", False)
         feedback: Optional[str] = None
         max_steps = obs["max_steps"]
