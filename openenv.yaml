@@ -1,0 +1,87 @@
+name: sql-debug-env
+version: "1.0.0"
+description: >
+  A real-world SQL Query Debugging environment where an AI agent diagnoses
+  performance, security, and correctness issues in SQL queries. Simulates
+  the daily workflow of a database engineer or data analyst reviewing queries
+  before production deployment. Useful for training agents on code review,
+  static analysis, and secure coding practices.
+
+author: satyam-sharma
+tags:
+  - openenv
+  - sql
+  - code-review
+  - security
+  - real-world
+
+tasks:
+  - name: classify_issue
+    description: >
+      Given a SQL query and schema context, identify the primary issue type.
+      Valid labels: select_star, sql_injection, cartesian_product,
+      missing_index, n_plus_one. Agent must output exactly one label in
+      its response. Single-step task.
+    difficulty: easy
+    max_steps: 1
+    reward_range: [0.0, 1.0]
+
+  - name: fix_query
+    description: >
+      Given a SQL query with a described issue, rewrite it to fix the problem.
+      The agent has up to 3 attempts and receives feedback after each step.
+      Final score is based on the best rewrite quality across all steps.
+    difficulty: medium
+    max_steps: 3
+    reward_range: [0.0, 1.0]
+
+  - name: full_review
+    description: >
+      Perform a comprehensive code review of a complex SQL query containing
+      multiple issues. The agent must: (1) identify ALL issues present,
+      (2) provide a fully corrected query, and (3) explain each fix.
+      Scored on a multi-criterion rubric across up to 5 attempts.
+    difficulty: hard
+    max_steps: 5
+    reward_range: [0.0, 1.0]
+
+observation_space:
+  type: structured
+  description: "Typed Pydantic model returned from reset() and step()"
+  fields:
+    query_id:
+      type: string
+      description: "Unique identifier for the SQL scenario"
+    task_name:
+      type: string
+      description: "One of: classify_issue, fix_query, full_review"
+    task_description:
+      type: string
+      description: "Human-readable task instructions for the agent"
+    sql_query:
+      type: string
+      description: "The SQL query under review"
+    schema_context:
+      type: string
+      description: "Table schema definitions relevant to the query"
+    step:
+      type: integer
+      description: "Current step number (1-indexed)"
+    max_steps:
+      type: integer
+      description: "Maximum steps allowed for this task"
+    feedback:
+      type: string
+      nullable: true
+      description: "Feedback from previous step (null on first step)"
+
+action_space:
+  type: text
+  description: >
+    Agent provides a free-text response. For classify_issue: include the
+    label. For fix_query: include rewritten SQL. For full_review: include
+    issue list, fixed query, and explanations.
+  field: content
+
+reward_range: [0.0, 1.0]
+episode_termination: "done=true when max_steps reached or score=1.0"
