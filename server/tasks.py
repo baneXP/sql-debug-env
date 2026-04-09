@@ -388,7 +388,7 @@ def grade_classify(action_content: str, task: Dict) -> Tuple[float, str]:
     label = task["label"]
 
     if label in content_lower:
-        return 1.0, f"✓ Correct! The primary issue is '{label}'."
+        return 0.999, f"✓ Correct! The primary issue is '{label}'."
 
     # Partial credit: keyword synonyms
     for kw in task.get("alt_keywords", []):
@@ -397,7 +397,7 @@ def grade_classify(action_content: str, task: Dict) -> Tuple[float, str]:
                 f"Partially correct. You identified related concepts but the precise label is '{label}'."
             )
 
-    return 0.0, (
+    return 0.001, (
         f"Incorrect. The primary issue type is '{label}'. "
         "Valid labels: select_star, sql_injection, cartesian_product, missing_index, n_plus_one."
     )
@@ -433,7 +433,7 @@ def grade_fix(action_content: str, task: Dict) -> Tuple[float, str]:
         b_matched = sum(1 for p in bonus if p.lower() in content_lower)
         score += 0.15 * (b_matched / len(bonus))
 
-    score = max(0.0, min(1.0, round(score, 4)))
+    score = max(0.001, min(0.999, round(score, 4)))
 
     if score >= 0.85:
         fb = "Excellent fix! The rewrite correctly addresses the issue."
@@ -464,7 +464,7 @@ def grade_review(action_content: str, task: Dict) -> Tuple[float, str]:
         else:
             missed_criteria.append(criterion.replace("_", " "))
 
-    score = min(1.0, round(score, 4))
+    score = max(0.001, min(0.999, round(score, 4)))
 
     found_str = ", ".join(found_criteria) if found_criteria else "none"
     missed_str = ", ".join(missed_criteria) if missed_criteria else "none"
